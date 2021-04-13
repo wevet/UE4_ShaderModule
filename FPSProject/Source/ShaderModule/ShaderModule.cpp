@@ -1,7 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ShaderModule.h"
-#include "Modules/ModuleManager.h"
 
  
 void FShaderModule::StartupModule()
@@ -13,12 +12,15 @@ void FShaderModule::StartupModule()
 		AddShaderSourceDirectoryMapping("/Project", ShaderDirectory);
 	}
 #endif
+
+	UE_LOG(LogTemp, Warning, TEXT("FShaderModule::StartupModule"));
 }
 
 void FShaderModule::ShutdownModule()
 {
-
+	UE_LOG(LogTemp, Warning, TEXT("FShaderModule::ShutdownModule"));
 }
 
 
-IMPLEMENT_GAME_MODULE(FShaderModule, ShaderModule, );
+IMPLEMENT_GAME_MODULE(FShaderModule, ShaderModule);
+

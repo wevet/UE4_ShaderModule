@@ -20,7 +20,8 @@ public class FPSProject : ModuleRules
 				"CoreUObject", 
 				"Engine", 
 				"InputCore", 
-				"HeadMountedDisplay" 
+				"HeadMountedDisplay",
+				"ShaderModule",
 			}
 		);
 	}
