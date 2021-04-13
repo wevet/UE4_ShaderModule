@@ -1,0 +1,9 @@
+{
+	"SourceFiles": [
+		"C:\\Users\\fenri\\Desktop\\UE_Projects\\UE4_ShaderModule\\FPSProject\\Source\\FPSProject\\FPSProject.Build.cs",
+		"C:\\Users\\fenri\\Desktop\\UE_Projects\\UE4_ShaderModule\\FPSProject\\Source\\ShaderModule\\ShaderModule.Build.cs",
+		"C:\\Users\\fenri\\Desktop\\UE_Projects\\UE4_ShaderModule\\FPSProject\\Source\\FPSProject.Target.cs",
+		"C:\\Users\\fenri\\Desktop\\UE_Projects\\UE4_ShaderModule\\FPSProject\\Source\\FPSProjectEditor.Target.cs"
+	],
+	"EngineVersion": "4.26.1"
+}
