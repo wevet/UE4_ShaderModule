@@ -12,8 +12,10 @@
 		{
 			"Name": "ShaderModule",
 			"Type": "Runtime",
-			"LoadingPhase": "PostConfigInit"
+			"LoadingPhase": "PostConfigInit",
+			"AdditionalDependencies": [
+				"Engine"
+			]
 		}
 	]
 }
-

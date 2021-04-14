@@ -1,5 +1,8 @@
 #include "/Engine/Private/Common.ush"
+#include "/Engine/Public/Platform.ush"
 
+
+float4 SimpleColor;
 
 void MainVS(
 	in float4 InPosition : ATTRIBUTE0, 
@@ -15,6 +18,6 @@ void MainVS(
 void MainPS(in float2 UV : TEXCOORD0, out float4 OutColor : SV_Target0)
 {
 	OutColor = float4(UV, 1, 1);
-
+	//OutColor = SimpleColor;
 }
 

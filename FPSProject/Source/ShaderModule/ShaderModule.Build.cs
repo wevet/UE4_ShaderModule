@@ -12,10 +12,11 @@ public class ShaderModule : ModuleRules
 			{ 
 				"Core", 
 				"CoreUObject", 
-				"Engine", 
-				"InputCore",
-				"RenderCore",
+				"Engine",
 				"RHI",
+				"RenderCore",
+				"Renderer",
+				//"ShaderCore",
 			}
 		);
 	}
