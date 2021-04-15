@@ -3,13 +3,8 @@
 
 #include "SketchComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "SketchShader.h"
 #include "RHIResources.h"
 #include "MeshPassProcessor.h"
-
-#define GETSAFERHISHADER_PIXEL(Shader) ((Shader) ? (Shader)->GetPixelShader() : nullptr)
-#define GETSAFERHISHADER_VERTEX(Shader) ((Shader) ? (Shader)->GetVertexShader() : nullptr)
-
 
 
 USketchComponent::USketchComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -21,6 +16,33 @@ USketchComponent::USketchComponent(const FObjectInitializer& ObjectInitializer) 
 void USketchComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	for (int i = 0; i < 10; ++i)
+	{
+		auto Data = SketchData();
+		Data.position.X = FMath::RandRange(-0.0f, 0.0f);
+		Data.position.Y = FMath::RandRange(-0.0f, 0.0f);
+		Data.acceleration.X = FMath::RandRange(-1.0f, 1.0f);
+		Data.acceleration.Y = FMath::RandRange(-1.0f, 1.0f);
+		Data.acceleration.Normalize();
+		StructuredBufferResourceArray.Add(Data);
+	}
+
+	FRHIResourceCreateInfo Info(&StructuredBufferResourceArray);
+	StructuredBuffer = RHICreateStructuredBuffer(
+		sizeof(SketchData), 
+		sizeof(SketchData) * 10, 
+		BUF_ShaderResource | BUF_Static, 
+		Info);
+
+	StructuredBufferSRV = RHICreateShaderResourceView(StructuredBuffer);
+}
+
+void USketchComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	StructuredBufferSRV.SafeRelease();
+	StructuredBuffer.SafeRelease();
+	Super::EndPlay(EndPlayReason);
 }
 
 
@@ -33,13 +55,33 @@ void USketchComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		return;
 	}
 
-	auto Self = this;
+	ConstantParameters.actorsNum++;
+	ConstantParameters.resolution.X = GSystemResolution.ResX;
+	ConstantParameters.resolution.Y = GSystemResolution.ResY;
+	VariableParameters.time += DeltaTime;
+
+	for (int i = 0; i < 10; ++i)
+	{
+		SketchData Data = StructuredBufferResourceArray[i];
+		Data.position += Data.acceleration * DeltaTime * 0.5f;
+		if (1.0f <= FMath::Abs(Data.position.X))
+		{
+			Data.acceleration.X *= -1.0f;
+		}
+
+		if (1.0f <= FMath::Abs(Data.position.Y))
+		{
+			Data.acceleration.Y *= -1.0f;
+		}
+		StructuredBufferResourceArray[i] = Data;
+	}
+
 	auto RenderTargetResource = RenderTexture->GameThread_GetRenderTargetResource();
 
 	ENQUEUE_RENDER_COMMAND(FRaymarchingPostprocess)
-	([Self, RenderTargetResource](FRHICommandListImmediate& RHICmdList)
+	([this, RenderTargetResource](FRHICommandListImmediate& RHICmdList)
 	{
-		Self->ExecuteInRenderThread(RHICmdList, RenderTargetResource);
+		this->ExecuteInRenderThread(RHICmdList, RenderTargetResource);
 	});
 }
 
@@ -63,19 +105,19 @@ void USketchComponent::ExecuteInRenderThread(FRHICommandListImmediate& RHICmdLis
 
 	// Shader setup
 	FGlobalShaderMap* ShaderMap = GetGlobalShaderMap(ERHIFeatureLevel::SM5);
-	TShaderMapRef<FSketchShaderVS> VertexShader(ShaderMap);
-	TShaderMapRef<FSketchShaderPS> PixelShader(ShaderMap);
+	TShaderMapRef<FSketchShaderVS> ShaderVS(ShaderMap);
+	TShaderMapRef<FSketchShaderPS> ShaderPS(ShaderMap);
 
-	auto PixelShaderPtr = (&PixelShader)->GetPixelShader();
-	if (PixelShaderPtr)
-	{
-		if (MainTexture)
-		{
-			FTexture2DRHIRef Texture = MainTexture->Resource->TextureRHI->GetTexture2D();
-			PixelShader->SetMainTexture(RHICmdList, PixelShaderPtr, Texture);
-		}
-		PixelShader->SetMainColor(RHICmdList, PixelShaderPtr, MainColor);
-	}
+	//SketchData* Ptr = (SketchData*)RHILockStructuredBuffer(StructuredBuffer, 0, sizeof(SketchData), EResourceLockMode::RLM_WriteOnly);
+	//FMemory::Memcpy(Ptr, StructuredBufferResourceArray.GetData(), sizeof(SketchData) * 10);
+	//RHIUnlockStructuredBuffer(StructuredBuffer.GetReference());
+
+	FTexture2DRHIRef Texture = MainTexture->Resource->TextureRHI->GetTexture2D();
+	ShaderVS->SetUniformBuffers(RHICmdList, ConstantParameters, VariableParameters);
+	ShaderPS->SetUniformBuffers(RHICmdList, ConstantParameters, VariableParameters);
+	ShaderPS->SetMainTexture(RHICmdList, Texture);
+	ShaderPS->SetMainColor(RHICmdList, MainColor);
+	//ShaderPS->SetStructuredBuffers(RHICmdList, StructuredBufferSRV);
 
 
 	FSketchVertexDeclaration VertexDec;
@@ -87,23 +129,24 @@ void USketchComponent::ExecuteInRenderThread(FRHICommandListImmediate& RHICmdLis
 	PipelineStateInitializer.PrimitiveType = PT_TriangleList;
 	PipelineStateInitializer.BoundShaderState.VertexDeclarationRHI = VertexDec.VertexDeclarationRHI;
 
-	// ver 4.26 nothings macros
-	PipelineStateInitializer.BoundShaderState.VertexShaderRHI = GETSAFERHISHADER_VERTEX(&VertexShader);
-	PipelineStateInitializer.BoundShaderState.PixelShaderRHI = GETSAFERHISHADER_PIXEL(&PixelShader);
+	PipelineStateInitializer.BoundShaderState.VertexShaderRHI = ShaderVS.GetVertexShader();
+	PipelineStateInitializer.BoundShaderState.PixelShaderRHI = ShaderPS.GetPixelShader();
 	
 	PipelineStateInitializer.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None>::GetRHI();
 	PipelineStateInitializer.BlendState = TStaticBlendState<>::GetRHI();
 	PipelineStateInitializer.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
 	SetGraphicsPipelineState(RHICmdList, PipelineStateInitializer);
 
-	static const FSketchVertex Vertices[4] = {
+	static const FSketchVertex Vertices[4] = 
+	{
 		{ FVector4(-1.0f,  1.0f, 0.0f, 1.0f), FVector2D(0.0f, 0.0f)},
 		{ FVector4(1.0f,  1.0f, 0.0f, 1.0f), FVector2D(1.0f, 0.0f)},
 		{ FVector4(-1.0f, -1.0f, 0.0f, 1.0f), FVector2D(0.0f, 1.0f)},
 		{ FVector4(1.0f, -1.0f, 0.0f, 1.0f), FVector2D(1.0f, 1.0f)},
 	};
 
-	static const uint16 Indices[6] = {
+	static const uint16 Indices[6] = 
+	{
 		0, 1, 2,
 		2, 1, 3
 	};

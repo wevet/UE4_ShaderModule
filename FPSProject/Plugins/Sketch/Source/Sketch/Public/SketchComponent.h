@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "SketchShader.h"
 #include "SketchComponent.generated.h"
 
 
@@ -17,6 +18,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -33,5 +35,25 @@ public:
 
 protected:
 	void ExecuteInRenderThread(FRHICommandListImmediate& RHICmdList, FTextureRenderTargetResource* OutputRenderTargetResource);
-	void DrawIndexedPrimitiveUP(FRHICommandList& RHICmdList, uint32 PrimitiveType, uint32 MinVertexIndex, uint32 NumVertices, uint32 NumPrimitives, const void* IndexData, uint32 IndexDataStride, const void* VertexData, uint32 VertexDataStride);
+
+	void DrawIndexedPrimitiveUP(
+		FRHICommandList& RHICmdList, 
+		uint32 PrimitiveType, uint32 MinVertexIndex, 
+		uint32 NumVertices, uint32 NumPrimitives, 
+		const void* IndexData, uint32 IndexDataStride, 
+		const void* VertexData, uint32 VertexDataStride);
+
+protected:
+	struct SketchData
+	{
+		FVector2D position;
+		FVector2D acceleration;
+	};
+
+	TResourceArray<SketchData> StructuredBufferResourceArray;
+	FStructuredBufferRHIRef StructuredBuffer;
+	FShaderResourceViewRHIRef StructuredBufferSRV;
+
+	FConstantParameters ConstantParameters;
+	FVariableParameters VariableParameters;
 };

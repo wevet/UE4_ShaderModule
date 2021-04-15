@@ -8,10 +8,25 @@
 #include "RenderResource.h"
 #include "ShaderCompilerCore.h"
 
+BEGIN_GLOBAL_SHADER_PARAMETER_STRUCT(FConstantParameters, )
+	SHADER_PARAMETER(int, actorsNum)
+	SHADER_PARAMETER(FVector4, resolution)
+	SHADER_PARAMETER(FVector4, viewOrigin)
+	SHADER_PARAMETER(FMatrix, viewMatrix)
+	SHADER_PARAMETER(FMatrix, projMatrix)
+END_GLOBAL_SHADER_PARAMETER_STRUCT()
 
-/**
- *
- */
+BEGIN_GLOBAL_SHADER_PARAMETER_STRUCT(FVariableParameters, )
+	SHADER_PARAMETER(float, time)
+END_GLOBAL_SHADER_PARAMETER_STRUCT()
+
+typedef TUniformBufferRef<FConstantParameters> FConstantParametersRef;
+typedef TUniformBufferRef<FVariableParameters> FVariableParametersRef;
+
+
+/*
+*	VertexShader
+*/
 class FSketchShaderVS : public FGlobalShader
 {
 	DECLARE_SHADER_TYPE(FSketchShaderVS, Global);
@@ -19,10 +34,9 @@ class FSketchShaderVS : public FGlobalShader
 public:
 	FSketchShaderVS() 
 	{
-
 	}
 
-	explicit FSketchShaderVS(const ShaderMetaType::CompiledShaderInitializerType& Initializer);
+	FSketchShaderVS(const ShaderMetaType::CompiledShaderInitializerType& Initializer);
 
 	static bool ShouldCache(EShaderPlatform Platform) 
 	{
@@ -36,9 +50,17 @@ public:
 
 	static void ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& Parameters, FShaderCompilerEnvironment& OutEnvironment);
 
+	void SetUniformBuffers(FRHICommandList& CommandList, FConstantParameters& Constants, FVariableParameters& Variables);
+	void SetStructuredBuffers(FRHICommandList& CommandList, FShaderResourceViewRHIRef& StructuredBuffer);
+
+protected:
+	LAYOUT_FIELD(FShaderResourceParameter, SrcBuffer);
 };
 
 
+/*
+*	PixelShader
+*/
 class FSketchShaderPS : public FGlobalShader
 {
 	DECLARE_SHADER_TYPE(FSketchShaderPS, Global);
@@ -47,7 +69,8 @@ public:
 	FSketchShaderPS() 
 	{
 	}
-	explicit FSketchShaderPS(const ShaderMetaType::CompiledShaderInitializerType& Initializer);
+	
+	FSketchShaderPS(const ShaderMetaType::CompiledShaderInitializerType& Initializer);
 
 	static bool ShouldCache(EShaderPlatform Platform) 
 	{
@@ -61,22 +84,17 @@ public:
 
 	static void ModifyCompilationEnvironment(const FGlobalShaderPermutationParameters& Parameters, FShaderCompilerEnvironment& OutEnvironment);
 
-public:
-	template<typename TShaderRHIParamRef>
-	void SetMainTexture(FRHICommandListImmediate& RHICmdList, const TShaderRHIParamRef ShaderRHI, const FTexture2DRHIRef InMainTexture)
-	{
-		SetTextureParameter(RHICmdList, ShaderRHI, MainTexture, InMainTexture);
-	}
 
-	template<typename TShaderRHIParamRef>
-	void SetMainColor(FRHICommandListImmediate& RHICmdList, const TShaderRHIParamRef ShaderRHI, const FLinearColor& InColor)
-	{
-		SetShaderValue(RHICmdList, ShaderRHI, MainColor, InColor);
-	}
+public:
+	void SetMainTexture(FRHICommandListImmediate& CommandList, const FTexture2DRHIRef InMainTexture);
+	void SetMainColor(FRHICommandListImmediate& CommandList, const FLinearColor& InColor);
+	void SetUniformBuffers(FRHICommandList& CommandList, FConstantParameters& Constants, FVariableParameters& Variables);
+	void SetStructuredBuffers(FRHICommandList& CommandList, FShaderResourceViewRHIRef& StructuredBuffer);
 
 protected:
 	LAYOUT_FIELD(FShaderParameter, MainColor);
 	LAYOUT_FIELD(FShaderResourceParameter, MainTexture);
+	LAYOUT_FIELD(FShaderResourceParameter, SrcBuffer);
 };
 
 

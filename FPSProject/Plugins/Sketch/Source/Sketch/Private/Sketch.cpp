@@ -10,8 +10,11 @@
 
 void FSketchModule::StartupModule()
 {
-	FString PluginDirectory =FPaths::Combine(IPluginManager::Get().FindPlugin(TEXT("Sketch"))->GetBaseDir(), TEXT("Shader"));
-	AddShaderSourceDirectoryMapping("/Sketch", PluginDirectory);
+	FString PluginDirectory = IPluginManager::Get().FindPlugin(TEXT("Sketch"))->GetBaseDir();
+	if (!AllShaderSourceDirectoryMappings().Contains("/Plugins/Sketch"))
+	{
+		AddShaderSourceDirectoryMapping("/Plugins/Sketch", PluginDirectory);
+	}
 	UE_LOG(LogTemp, Warning, TEXT("SketchModule->StartupModule"));
 }
 

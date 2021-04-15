@@ -1,14 +1,21 @@
 #include "/Engine/Private/Common.ush"
-#include "/Engine/Public/Platform.ush"
 
+//#define STRUCTUREBUFFER_ON 1
 
-float4 SimpleColor;
+#ifdef STRUCTUREBUFFER_ON
+struct SketchData
+{
+	float2 position;
+	float2 acceleration;
+};
 
-void MainVS(
-	in float4 InPosition : ATTRIBUTE0, 
-	in float2 InUV : ATTRIBUTE1,
-	out float2 OutUV : TEXCOORD0, 
-	out float4 OutPosition : SV_Position)
+StructuredBuffer<SketchData> sketchData;
+#endif
+
+float4 mainColor;
+sampler2D mainTexture;
+
+void MainVS(in float4 InPosition : ATTRIBUTE0, in float2 InUV : ATTRIBUTE1, out float2 OutUV : TEXCOORD0, out float4 OutPosition : SV_Position)
 {
 	OutPosition = InPosition;
 	OutUV = InUV;
@@ -17,7 +24,30 @@ void MainVS(
 
 void MainPS(in float2 UV : TEXCOORD0, out float4 OutColor : SV_Target0)
 {
-	OutColor = float4(UV, 1, 1);
-	//OutColor = SimpleColor;
+#ifdef STRUCTUREBUFFER_ON
+	float2 uv = (UV * 2.0 - 1.0);
+	float3 result = float3(1e+4, 0, 0);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		SketchData data = sketchData[i];
+		float dist = distance(data.position, uv);
+		result = (result.x < dist) ? result : float3(dist, data.acceleration);
+	}
+	
+	float4 color = float4(1, 1, 1, 1);
+	color.rgb = step(result.x, 0.05);
+	color.rg *= result.yz;
+	OutColor = color;	
+#else
+	
+	float2 uv = (UV * 2.0 - 1.0) * constants.resolution.xy / min(constants.resolution.x, constants.resolution.y);
+	float4 baseMap = tex2D(mainTexture, uv);
+	float4 color = float4(0, 0, 0, 1);
+	color.rgb = step(distance(uv, float2(0, 0)), sin(variables.time * 10.0) * 0.1 + 0.5);
+	color *= mainColor * baseMap;
+	OutColor = color;
+#endif
+	
 }
 
