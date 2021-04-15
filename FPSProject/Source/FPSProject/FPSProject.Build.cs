@@ -15,15 +15,15 @@ public class FPSProject : ModuleRules
 		PrivateIncludePaths.Add("FPSProject/Private");
 
 		PublicDependencyModuleNames.AddRange(new string[]
-			{ 
-				"Core", 
-				"CoreUObject", 
-				"Engine", 
-				"InputCore", 
-				"HeadMountedDisplay",
-				"ShaderModule",
-			}
-		);
+		{ 
+			"Core", 
+			"CoreUObject", 
+			"Engine", 
+			"InputCore", 
+			"HeadMountedDisplay",
+			"Sketch",
+		});
+
 	}
 }
 

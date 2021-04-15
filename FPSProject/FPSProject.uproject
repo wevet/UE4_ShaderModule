@@ -8,14 +8,6 @@
 			"Name": "FPSProject",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "ShaderModule",
-			"Type": "Runtime",
-			"LoadingPhase": "PostConfigInit",
-			"AdditionalDependencies": [
-				"Engine"
-			]
 		}
 	]
 }

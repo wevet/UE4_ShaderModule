@@ -10,6 +10,9 @@ rmdir /q /s ..\\.vs
 rmdir /q /s ..\\Binaries
 rmdir /q /s ..\\DerivedDataCache
 
+rmdir /q /s ..\\Plugins\\Sketch\\Binaries
+rmdir /q /s ..\\Plugins\\Sketch\\Intermediate
+
 del ..\\FPSProject.sln
 
 pause
