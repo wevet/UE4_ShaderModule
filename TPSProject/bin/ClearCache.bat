@@ -12,6 +12,8 @@ rmdir /q /s ..\\DerivedDataCache
 
 rmdir /q /s ..\\Plugins\\Sketch\\Binaries
 rmdir /q /s ..\\Plugins\\Sketch\\Intermediate
+rmdir /q /s ..\\Plugins\\MeshDistortion\\Binaries
+rmdir /q /s ..\\Plugins\\MeshDistortion\\Intermediate
 
 del ..\\TPSProject.sln
 
