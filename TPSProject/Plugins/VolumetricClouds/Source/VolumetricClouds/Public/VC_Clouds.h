@@ -4,13 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
+#include "Components/BillboardComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/DirectionalLight.h"
-#include "Engine/World.h"
+#include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget.h"
-
 #include "VC_Clouds.generated.h"
+
 
 UCLASS()
 class VOLUMETRICCLOUDS_API AVC_Clouds : public AActor
@@ -49,20 +51,24 @@ protected:
 	bool HasGameWorld() const;
 
 public:
-	FORCEINLINE bool IsDynamicInGame() const { return bUseDynamicMaterials; };
+	FORCEINLINE bool IsDynamicInGame() const
+	{
+		return bUseDynamicMaterials; 
+	};
 
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
+	class UBillboardComponent* SpriteComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent* CloudsBoxMesh;
 
 
 #pragma region CppProperties
 protected:
 	UPROPERTY()
-	class UBillboardComponent* SpriteComponent;
-
-	UPROPERTY()
 	class UTexture2D* SpriteTexture;
-
-	UPROPERTY()
-	class UStaticMeshComponent* CloudsBoxMesh;
 
 	UPROPERTY()
 	class UTextureRenderTarget2D* ShadowRenderTarget;
@@ -100,7 +106,6 @@ protected:
 		FName("InOutScatterLerp"),
 		FName("InScatter"),
 		FName("InScatterIntensity"),
-		FName("LightColor"),
 		FName("LightColorIntensity"),
 		FName("LightIntensity"),
 		FName("LightPow"),
@@ -133,16 +138,17 @@ protected:
 	};
 #pragma endregion
 
+
 #pragma region Properties
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds", DisplayName = "Directional Light Actor")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds")
 	ADirectionalLight* DirectionalLightActor;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds", DisplayName = "Light Color")
-	FLinearColor LightColor;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds", DisplayName = "Shadow Color")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds")
 	FLinearColor ShadowColor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds")
+	UTexture2D* WeatherMapTexure;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds|Atmosphere", DisplayName = "Blend Disntace", meta = (ClampMin = "0.0", ClampMax = "20.0", UIMin = "0.0", UIMax = "20.0"))
 	float AtmosphereBlendDistance;
@@ -195,9 +201,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds|Weather", DisplayName = "Map Tile", meta = (ClampMin = "0.0", ClampMax = "14.0", UIMin = "0.0", UIMax = "14.0"))
 	float WeatherMapTile;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds|Weather", DisplayName = "Weather Map")
-	UTexture2D* WeatherMapTexure;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Clouds|Ray", DisplayName = "View Max Steps", meta = (ClampMin = "1.0", ClampMax = "4000.0", UIMin = "1.0", UIMax = "4000.0"))
 	float RayMaxSteps;
 

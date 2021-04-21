@@ -1,0 +1,58 @@
+#include "/Engine/Private/Common.ush"
+
+
+//return ResolvedView.DirectionalLightDirection;
+
+//float3 ActorMin, ActorMax, CamPos, RayPos, RayDir;
+//float StepDistanceScale, StepScaleDistance;
+//int RayMaxSteps;
+
+float Transmittance = 1;
+
+bool bZeroSample = false;
+float StepDistanceScale = clamp((length(RayPos.xy - CamPos.xy) - StepScaleDistance) / StepScaleDistance, 0, 10);
+RayDir += RayDir * StepDistanceScale;
+
+
+for(int r = 0; r < RayMaxSteps; r++)
+{
+	float MipMapDistanceScale = floor(length(RayPos.xy - CamPos.xy) / MipMapScaleDistance);
+	float DensitySample = CustomExpression1(Parameters, RayPos, BaseNoiseTex, BaseNoiseTexSampler, BaseNoiseTexTile, SmallNoiseTex, SmallNoiseTexSampler, SmallNoiseTexTile, WeatherTex, WeatherTexSampler, WeatherTexTile, WeatherParam, Wind, ActorMin, ActorMax, MipMapDistanceScale, 0);
+
+	if(DensitySample > 0.01)
+	{
+		if(bZeroSample)
+		{
+			bZeroSample = false;
+			RayPos -= RayDir;
+
+			MipMapDistanceScale = floor(length(RayPos.xy - CamPos.xy) / MipMapScaleDistance);
+			DensitySample = CustomExpression1(Parameters, RayPos, BaseNoiseTex, BaseNoiseTexSampler, BaseNoiseTexTile, SmallNoiseTex, SmallNoiseTexSampler, SmallNoiseTexTile, WeatherTex, WeatherTexSampler, WeatherTexTile, WeatherParam, Wind, ActorMin, ActorMax, MipMapDistanceScale, 0);
+		}
+		Transmittance *= 1 - DensitySample;
+	}
+
+	if(DensitySample > 0)
+	{
+		RayPos += RayDir;
+	}
+	else
+	{
+		RayPos += RayDir * 2;
+		bZeroSample = true;
+	}
+
+
+	if(RayPos.x > ActorMax.x || RayPos.x < ActorMin.x || RayPos.y > ActorMax.y || RayPos.y < ActorMin.y || RayPos.z > ActorMax.z || RayPos.z < ActorMin.z) 
+	{
+		break; 
+	}
+
+	if(Transmittance <= 0)
+	{
+		break;
+	}
+} 
+
+return Transmittance;
+

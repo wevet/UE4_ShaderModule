@@ -1,23 +1,18 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "VC_Clouds.h"
-#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
-#include "Components/BillboardComponent.h"
-#include "Materials/MaterialInstanceDynamic.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Components/LightComponent.h"
 
-//#include "UnrealEd.h"
-//#include "Editor/UnrealEd/Public/EditorViewportClient.h"
 #define TIME FName(TEXT("Time"))
-#define LIGHT_COLOR FName(TEXT("LightColor"))
 #define SHADOW_COLOR FName(TEXT("ShadowColor"))
 #define WEATHER_MAP FName(TEXT("WeatherMapTexure"))
 #define LIGHT_DIRECTION FName(TEXT("LightDirection"))
 #define ACTOR_POSITION FName(TEXT("ActorPosition"))
 #define ACTOR_SCALE FName(TEXT("ActorScale"))
 
-
+//#define OVERRIDE_LIGHTDIRECTION 1
 
 AVC_Clouds::AVC_Clouds(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -74,7 +69,7 @@ AVC_Clouds::AVC_Clouds(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	}
 
 	{
-		static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> FindAsset(TEXT("/VolumetricClouds/Materials/LFMI_GroundShadows.LFMI_GroundShadows"));
+		static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> FindAsset(TEXT("/VolumetricClouds/Materials/MI_GroundShadows.MI_GroundShadows"));
 		LightFunctionMaterialInstance = FindAsset.Object;
 	}
 
@@ -92,7 +87,6 @@ AVC_Clouds::AVC_Clouds(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	// Init Params
 	bUseDynamicMaterials = true;
 
-	LightColor = FLinearColor(1.14f, 1.22f, 1.31f, 1.0f);
 	ShadowColor = FLinearColor(0.60f, 0.63f, 0.7f, 1.0f);
 	AtmosphereBlendDistance = 5.0f;
 	AtmosphereBlendIntensity = 1.0f;
@@ -126,8 +120,10 @@ AVC_Clouds::AVC_Clouds(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	WindDirectionZ = -0.05f;
 
 	// Init Transform
-	SetActorLocation(FVector(0.0f, 0.0f, 125000.0f));
-	SetActorScale3D(FVector(40000.0f, 40000.0f, 2000.0f));
+	const FVector BasePos(FVector(0.0f, 0.0f, 125000.0f));
+	const FVector BaseScale(FVector(40000.0f, 40000.0f, 2000.0f));
+	SetActorLocation(BasePos);
+	SetActorScale3D(BaseScale);
 }
 
 
@@ -186,17 +182,18 @@ void AVC_Clouds::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(AVC_Clouds, DirectionalLightActor))
 	{
 		UpdateLightDirection();
-		//if (DirectionalLightActor)
-		//{
-		//	DirectionalLightActor->SetLightFunctionFadeDistance(GetActorScale().X * 50.0f);
-		//}
+#ifdef OVERRIDE_LIGHTDIRECTION
+		if (DirectionalLightActor)
+		{
+			DirectionalLightActor->SetLightFunctionFadeDistance(GetActorScale().X * 50.0f);
+		}
+#endif
 	}
 
 	if (FFloatProperty* PropertyFloat = ((FFloatProperty*)e.Property))
 	{
 		if (PropertyName == FName("R") || PropertyName == FName("G") || PropertyName == FName("B"))
 		{
-			SetMaterialColor(LIGHT_COLOR, FLinearColor(LightColor));
 			SetMaterialColor(SHADOW_COLOR, FLinearColor(ShadowColor));
 		}
 		else
@@ -208,7 +205,6 @@ void AVC_Clouds::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 
 	if (FStructProperty* StructProperty = ((FStructProperty*)e.Property))
 	{
-		SetMaterialColor(LIGHT_COLOR, FLinearColor(LightColor));
 		SetMaterialColor(SHADOW_COLOR, FLinearColor(ShadowColor));
 	}
 
@@ -249,10 +245,12 @@ void AVC_Clouds::CreateDynamicMaterials()
 	{
 		LightFunctionMaterialInstanceDynamic = UMaterialInstanceDynamic::Create(LightFunctionMaterialInstance, this);
 
-		//if (DirectionalLightActor)
-		//{
-		//	DirectionalLightActor->SetLightFunctionMaterial(LightFunctionMaterialInstanceDynamic);
-		//}
+#ifdef OVERRIDE_LIGHTDIRECTION
+		if (DirectionalLightActor)
+		{
+			DirectionalLightActor->SetLightFunctionMaterial(LightFunctionMaterialInstanceDynamic);
+		}
+#endif
 	}
 }
 
@@ -387,7 +385,7 @@ void AVC_Clouds::UpdateLightDirection()
 	const FVector LightDirection = DirectionalLightActor->GetActorForwardVector() * -1;
 	SetMaterialColor(LIGHT_DIRECTION, FLinearColor(LightDirection));
 
-#if false
+#ifdef OVERRIDE_LIGHTDIRECTION
 	if (IsDynamicInGame())
 	{
 		if (DirectionalLightActor->GetLightComponent()->LightFunctionMaterial != LightFunctionMaterialInstanceDynamic && LightFunctionMaterialInstanceDynamic)
