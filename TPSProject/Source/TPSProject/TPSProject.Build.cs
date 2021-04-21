@@ -21,9 +21,11 @@ public class TPSProject : ModuleRules
 			"Engine", 
 			"InputCore", 
 			"HeadMountedDisplay",
+
 			// Custom Plugins
 			"Sketch",
 			"MeshDistortion",
+			"VolumetricClouds",
 		});
 
 	}

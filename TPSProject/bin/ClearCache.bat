@@ -14,6 +14,8 @@ rmdir /q /s ..\\Plugins\\Sketch\\Binaries
 rmdir /q /s ..\\Plugins\\Sketch\\Intermediate
 rmdir /q /s ..\\Plugins\\MeshDistortion\\Binaries
 rmdir /q /s ..\\Plugins\\MeshDistortion\\Intermediate
+rmdir /q /s ..\\Plugins\\VolumetricClouds\\Binaries
+rmdir /q /s ..\\Plugins\\VolumetricClouds\\Intermediate
 
 del ..\\TPSProject.sln
 

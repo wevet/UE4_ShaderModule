@@ -5,8 +5,9 @@ Version 4.26
 
 
 # Includes Plugins
-Sketch Shader (Tutorial)
-MeshDistortion (Tutorial)
+* Sketch Shader (Tutorial)
+* MeshDistortion (Tutorial)
+* VolumetricClouds (Experimental)
 
 # DEMO
 Sketch
@@ -15,4 +16,8 @@ Sketch
 
 MeshDistortion
 ![MeshDistortion](Demo/MeshDistortion.png)
+
+
+VolumetricClouds
+![VolumetricClouds](Demo/VolumetricClouds.gif)
 
