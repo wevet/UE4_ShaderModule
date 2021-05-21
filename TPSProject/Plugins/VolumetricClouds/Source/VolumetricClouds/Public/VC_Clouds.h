@@ -56,6 +56,11 @@ public:
 		return bUseDynamicMaterials; 
 	};
 
+	FORCEINLINE class UStaticMeshComponent* GetCloudsMeshComponent() const
+	{ 
+		return CloudsBoxMesh;
+	}
+
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))

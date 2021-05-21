@@ -19,6 +19,11 @@
 			"Name": "VolumetricClouds",
 			"Type": "RunTime",
 			"LoadingPhase": "PreDefault"
-		}
+		},
+		{
+			"Name": "VolumetricCloudsPainter",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}		
 	]
 }
